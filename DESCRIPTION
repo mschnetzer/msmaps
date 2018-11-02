@@ -5,6 +5,6 @@ Version: 0.1.0
 Author: Matthias Schnetzer
 Maintainer: Matthias Schnetzer <matthias.schnetzer@akwien.at>
 Description: This package includes functions to plot maps for Austrian districts and European countries.
-License: What license is it under?
+License: GPL-2
 Encoding: UTF-8
 LazyData: true
