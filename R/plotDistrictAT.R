@@ -6,10 +6,10 @@
 #' dataset Dataframe (must include 'iso' for geographic identification)
 #' fillvar Variable of interest (VOI)
 #' colpal Colors palette for discrete VOI, Low/High for continuous VOI
-#' ownlabs Add own dataframe labels(iso, nudgex, nudgey, labname, stringasfactors=F), default=FALSE
-#' citylabs Automatic regional capital labels, default=FALSE
-#' wienbezirke Show Vienna districts separately, default=FALSE
-#' legpos Position of legend, default="none"
+#' ownlabs Add own dataframe \code{ownlabs(iso, nudgex, nudgey, labname, stringasfactors=F)}, default=FALSE
+#' citylabs Automatic regional capital labels, \code{default=FALSE}
+#' wienbezirke Show Vienna districts separately, \code{default=FALSE}
+#' legpos Position of legend, \code{default="none"}
 #' tit Title of plot
 #' subtit Subtitle of plot
 #' captit Caption of plot
@@ -23,31 +23,29 @@ require(tidyverse)
 require(ggrepel)
 require(msthemes)
 
-# Load JSON map from https://github.com/ginseng666/GeoJSON-TopoJSON-Austria
-map <- ifelse(wienbezirke==T, "data/bezirke_wien_gross_geo.json","data/bezirke_999_geo.json")
-
-geodat <- st_read(map, quiet=TRUE, stringsAsFactors=FALSE) %>%
-  mutate(
-    center = map(geometry, st_centroid),
-    centercoord = map(center, st_coordinates),
-    ccordx = map_dbl(centercoord, 1),
-    ccordy = map_dbl(centercoord, 2)
-  ) %>%
-    mutate(iso = as.numeric(iso)) %>%
-    mutate(name = str_replace_all(name,c("\\(Stadt\\)"="","-Stadt"=""," Stadt"=""," am Wörthersee"="")))
+if(wienbezirke==T) {
+  geodat <- bezirkewien
+} else {
+  geodat <- bezirke
+}
 
 if(citylabs==T) {
   labels <- data.frame(iso = c(802,701,501,401,302,101,601,201,900),
                        nudgey=c(0.4,-0.5,0.1,0.5,1.2,-0.5,-1.5,-1.7,0.1),
                        nudgex=c(0,0.2,-0.6,0,0.6,1,0,-0.8,0.9))
+  geodat <- geodat %>% left_join(labels,by="iso") %>%
+            mutate(labselect=as.logical(iso %in% labels$iso))
+} else {
+  geodat <- geodat %>% mutate(labselect=NA)
 }
-
-df <- geodat %>% left_join(labels,by="iso") %>% left_join(dataset,by="iso") %>%
-  mutate(labselect=as.logical(iso %in% labels$iso))
 
 if(ownlabs==T){
-  df <- df %>% mutate(name = case_when(labselect==T ~ labname, TRUE ~ name))
+  geodat <- geodat %>% left_join(ownlabs,by="iso") %>%
+    mutate(labselect=as.logical(iso %in% ownlabs$iso)) %>%
+    mutate(name = case_when(labselect==T ~ labname, TRUE ~ name))
 }
+
+df <- geodat %>% left_join(dataset,by="iso")
 
 plot <-
   ggplot(df) +
