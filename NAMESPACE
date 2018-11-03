@@ -1,1 +1,5 @@
 exportPattern("^[[:alpha:]]+")
+import(sf)
+import(tidyverse)
+import(ggrepel)
+import(msthemes)
