@@ -6,7 +6,7 @@
 #' dataset Dataframe (must include 'iso' for geographic identification)
 #' fillvar Variable of interest (VOI)
 #' colpal Colors palette for discrete VOI, Low/High for continuous VOI
-#' ownlabs Add own dataframe \code{ownlabs(iso, nudgex, nudgey, labname, stringasfactors=F)}, default=FALSE
+#' ownlabs Add own dataframe \code{ownlabels(iso, nudgex, nudgey, labname, stringasfactors=F)}, default=FALSE
 #' citylabs Automatic regional capital labels, \code{default=FALSE}
 #' wienbezirke Show Vienna districts separately, \code{default=FALSE}
 #' legpos Position of legend, \code{default="none"}
@@ -40,8 +40,8 @@ if(citylabs==T) {
 }
 
 if(ownlabs==T){
-  geodat <- geodat %>% left_join(ownlabs,by="iso") %>%
-    mutate(labselect=as.logical(iso %in% ownlabs$iso)) %>%
+  geodat <- geodat %>% left_join(ownlabels,by="iso") %>%
+    mutate(labselect=as.logical(iso %in% ownlabels$iso)) %>%
     mutate(name = case_when(labselect==T ~ labname, TRUE ~ name))
 }
 
