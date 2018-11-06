@@ -30,8 +30,9 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,savfile){
   df <- left_join(world, dataset, by=c("ISO_A2"="geo"))
 
   plot <-
-    ggplot(data = df) +
-    geom_sf(aes(fill = get(paste(fillvar))),size=0.3,alpha=0.8) +
+    ggplot() +
+    geom_sf(data = df, fill = "antiquewhite1", size = 0, alpha = 0.8) +
+    geom_sf(data = df, aes(fill = get(paste(fillvar))),size=0.3,alpha=0.8) +
     coord_sf(xlim = c(2500000, 6100000), ylim = c(1200000, 5500000), expand = FALSE, label_axes = "") +
     annotation_scale(location = "bl", width_hint = 0.4,height = unit(0.1,"cm"),text_cex = 0.5) +
     theme_ms() +
@@ -45,9 +46,9 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,savfile){
     labs(title=tit,subtitle=subtit, caption=captit)
 
   if(is.factor(df[[fillvar]])==T) {
-    plot + scale_fill_manual(values=colpal,na.value="antiquewhite1")
+    plot + scale_fill_manual(values=colpal,na.translate=FALSE)
   } else {
-    plot + scale_fill_gradient(low=colpal[1],high=colpal[2],na.value="antiquewhite1")
+    plot + scale_fill_gradient(low=colpal[1],high=colpal[2],na.translate=FALSE)
   }
   plot + ggsave(savfile,width=6,height=6,dpi=300)
 }
