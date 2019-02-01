@@ -43,12 +43,16 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,savfile){
           legend.title = element_blank(),
           legend.text = element_text(size=8),
           legend.key.size = unit(0.5,"cm")) +
-    labs(title=tit,subtitle=subtit, caption=captit)
+    labs(x="",y="",title=tit,subtitle=subtit, caption=captit)
 
   if(is.factor(df[[fillvar]])==T) {
     plot + scale_fill_manual(values=colpal,na.translate=FALSE)
   } else {
     plot + scale_fill_gradient(low=colpal[1],high=colpal[2],na.translate=FALSE)
   }
+  if(!missing(savfile)) {
   plot + ggsave(savfile,width=6,height=6,dpi=300)
+  } else {
+  plot
+  }
 }
