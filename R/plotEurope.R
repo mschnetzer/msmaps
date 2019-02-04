@@ -5,6 +5,7 @@
 #' @param
 #' dataset Dataframe including variable 'geo' with 2-digit country codes
 #' fillvar Variable of interest (VOI)
+#' labeldf Add own dataframe \code{labeldf(iso, nudgex, nudgey, labname, stringasfactors=F)}
 #' colpal Colors palette for discrete VOI, Low/High for continuous VOI
 #' tit Title of plot
 #' subtit Subtitle of plot
@@ -24,8 +25,11 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile)
 
   world <- getMap(resolution = "high")
   world <- world[which(world$REGION=="Europe" & world$NAME!="Greenland"),]
-  world <- spTransform(world, CRS=CRS("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs"))
+  world <- spTransform(world, CRSobj = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs")
   world <- st_as_sf(world)
+  world$LON <- st_coordinates(st_centroid(world$geometry))[,1]
+  world$LAT <- st_coordinates(st_centroid(world$geometry))[,2]
+
 
   df <- left_join(world, dataset, by=c("ISO_A2"="geo"))
 
@@ -44,10 +48,6 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile)
              expand = FALSE, label_axes = "") +
     annotation_scale(location = "bl", width_hint = 0.4,
                      height = unit(0.1,"cm"),text_cex = 0.5) +
-    geom_label_repel(data=subset(df,labselect==TRUE),
-                     aes(x = LON, y = LAT, label = name),
-                     color="black",size=2.5,nudge_y=df$nudgey[df$labselect==TRUE],
-                     nudge_x=df$nudgex[df$labselect==TRUE],segment.size = 0.3)
     theme_ms() +
     theme(panel.grid.major = element_line(color = gray(.1),
                                           linetype = "dashed", size = 0.1),
@@ -57,16 +57,28 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile)
                                            linetype="solid"),
           legend.title = element_blank(),
           legend.text = element_text(size=8),
-          legend.key.size = unit(0.5,"cm")) +
-    labs(title=tit,subtitle=subtit, caption=captit)
+          legend.key.size = unit(0.5,"cm"),
+          axis.title = element_blank()) +
+      labs(title=tit,subtitle=subtit,caption=captit)
 
   if(is.factor(df[[fillvar]])==T) {
-    plot + scale_fill_manual(values=colpal,na.translate=FALSE)
+    plot <- plot + scale_fill_manual(values=colpal,na.translate=FALSE)
   } else {
-    plot + scale_fill_gradient(low=colpal[1],high=colpal[2],na.translate=FALSE)
+    plot <- plot + scale_fill_gradient(low=colpal[1],high=colpal[2],na.translate=FALSE)
+  }
+
+  if(!missing(labeldf)){
+    plot <- plot +
+      geom_label_repel(data=subset(df,labselect==TRUE),
+            aes(x = LON, y = LAT, label = name),hjust=0.5,
+            nudge_y=df$nudgey[df$labselect==TRUE]*10000,
+            nudge_x=df$nudgex[df$labselect==TRUE]*10000,
+            color="black",size=2.5,segment.size = 0)
   }
 
   if(!missing(savfile)) {
-  plot + ggsave(savfile,width=6,height=6,dpi=300)
+    plot + ggsave(savfile,width=6,height=6,dpi=300)
+  } else {
+    plot
   }
 }
