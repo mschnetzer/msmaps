@@ -12,7 +12,7 @@
 #' savfile Filename for saving
 #' @export
 
-plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,savfile){
+plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile){
 
   require(sf)
   require(tidyverse)
@@ -29,30 +29,44 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,savfile){
 
   df <- left_join(world, dataset, by=c("ISO_A2"="geo"))
 
+  if(!missing(labeldf)) {
+    df <- df %>% left_join(labeldf, by = c("ISO_A2"="geo")) %>%
+      mutate(labselect=as.logical(ISO_A2 %in% labeldf$geo),
+             name = case_when(labselect==T ~ labname,
+                              TRUE ~ NA_character_))
+  }
+
   plot <-
     ggplot() +
     geom_sf(data = df, fill = "antiquewhite1", size = 0, alpha = 0.8) +
     geom_sf(data = df, aes(fill = get(paste(fillvar))),size=0.3,alpha=0.8) +
-    coord_sf(xlim = c(2500000, 6100000), ylim = c(1200000, 5500000), expand = FALSE, label_axes = "") +
-    annotation_scale(location = "bl", width_hint = 0.4,height = unit(0.1,"cm"),text_cex = 0.5) +
+    coord_sf(xlim = c(2500000, 6100000), ylim = c(1200000, 5500000),
+             expand = FALSE, label_axes = "") +
+    annotation_scale(location = "bl", width_hint = 0.4,
+                     height = unit(0.1,"cm"),text_cex = 0.5) +
+    geom_label_repel(data=subset(df,labselect==TRUE),
+                     aes(x = LON, y = LAT, label = name),
+                     color="black",size=2.5,nudge_y=df$nudgey[df$labselect==TRUE],
+                     nudge_x=df$nudgex[df$labselect==TRUE],segment.size = 0.3)
     theme_ms() +
-    theme(panel.grid.major = element_line(color = gray(.1),linetype = "dashed", size = 0.1),
+    theme(panel.grid.major = element_line(color = gray(.1),
+                                          linetype = "dashed", size = 0.1),
           panel.background = element_rect(fill = "aliceblue"),
           legend.position = c(0.12,0.85),
-          legend.background = element_rect(fill="white", size=0.2, linetype="solid"),
+          legend.background = element_rect(fill="white", size=0.2,
+                                           linetype="solid"),
           legend.title = element_blank(),
           legend.text = element_text(size=8),
           legend.key.size = unit(0.5,"cm")) +
-    labs(x="",y="",title=tit,subtitle=subtit, caption=captit)
+    labs(title=tit,subtitle=subtit, caption=captit)
 
   if(is.factor(df[[fillvar]])==T) {
     plot + scale_fill_manual(values=colpal,na.translate=FALSE)
   } else {
     plot + scale_fill_gradient(low=colpal[1],high=colpal[2],na.translate=FALSE)
   }
+
   if(!missing(savfile)) {
   plot + ggsave(savfile,width=6,height=6,dpi=300)
-  } else {
-  plot
   }
 }

@@ -1,7 +1,7 @@
 Package: msmaps
 Type: Package
 Title: Plot maps for Europe and Austria
-Version: 0.4.0
+Version: 0.5.0
 Author: Matthias Schnetzer
 Maintainer: Matthias Schnetzer <matthias.schnetzer@akwien.at>
 Description: This package includes functions to plot maps for Austrian districts and European countries.
