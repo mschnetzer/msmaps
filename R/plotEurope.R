@@ -1,7 +1,5 @@
 #' Plot map for European countries
 #'
-#' The map for Europe is included in the R-packages rworldmap and rworldxtra
-#'
 #' @param
 #' dataset Dataframe including variable 'geo' with 2-digit country codes
 #' fillvar Variable of interest (VOI)
@@ -18,24 +16,20 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile)
   require(sf)
   require(tidyverse)
   require(msthemes)
-  library(rworldmap)
-  library(rworldxtra)
-  library(ggspatial)
-  library(rgdal)
+  require(rnaturalearth)
+  require(rnaturalearthdata)
 
-  world <- getMap(resolution = "high")
-  world <- world[which(world$REGION=="Europe" & world$NAME!="Greenland"),]
-  world <- spTransform(world, CRSobj = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs")
-  world <- st_as_sf(world)
-  world$LON <- st_coordinates(st_centroid(world$geometry))[,1]
-  world$LAT <- st_coordinates(st_centroid(world$geometry))[,2]
+  sf_use_s2(FALSE)
 
+  europe <- ne_countries(scale = "medium", returnclass = "sf")
 
-  df <- left_join(world, dataset, by=c("ISO_A2"="geo"))
+  europe <- st_transform(europe, crs = '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs')
+
+  df <- left_join(europe, dataset, by=c("iso_a2"="geo"))
 
   if(!missing(labeldf)) {
-    df <- df %>% left_join(labeldf, by = c("ISO_A2"="geo")) %>%
-      mutate(labselect=as.logical(ISO_A2 %in% labeldf$geo),
+    df <- df %>% left_join(labeldf, by = c("iso_a2"="geo")) %>%
+      mutate(labselect=as.logical(iso_a2 %in% labeldf$geo),
              name = case_when(labselect==T ~ labname,
                               TRUE ~ NA_character_))
   }
@@ -46,11 +40,9 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile)
     geom_sf(data = df, aes(fill = get(paste(fillvar))),size=0.3,alpha=0.8) +
     coord_sf(xlim = c(2500000, 6100000), ylim = c(1200000, 5500000),
              expand = FALSE, label_axes = "") +
-    annotation_scale(location = "bl", width_hint = 0.4,
-                     height = unit(0.1,"cm"),text_cex = 0.5) +
     theme_ms() +
-    theme(panel.grid.major = element_line(color = gray(.1),
-                                          linetype = "dashed", size = 0.1),
+    theme(panel.grid.major = element_line(color = "gray60", linetype = "ff",
+                                          size = 0.1),
           panel.background = element_rect(fill = "aliceblue"),
           legend.position = c(0.12,0.85),
           legend.background = element_rect(fill="white", size=0.2,
@@ -58,6 +50,7 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile)
           legend.title = element_blank(),
           legend.text = element_text(size=8),
           legend.key.size = unit(0.5,"cm"),
+          plot.caption = element_text(margin = margin(t = unit(1,"lines"))),
           axis.title = element_blank()) +
       labs(title=tit,subtitle=subtit,caption=captit)
 
@@ -77,7 +70,8 @@ plotEurope <- function(dataset,fillvar,colpal,tit,subtit,captit,labeldf,savfile)
   }
 
   if(!missing(savfile)) {
-    plot + ggsave(savfile,width=6,height=6,dpi=300)
+    plot
+    ggsave(savfile,width=6,height=6,dpi=300)
   } else {
     plot
   }
