@@ -58,8 +58,10 @@ plot <-
   labs(x="",y="",title=tit,subtitle=subtit,caption=captit)
 
 if(is.factor(df[[fillvar]])==T) {
-  plot + scale_fill_manual(values=colpal) + ggsave(savfile)
+  plot + scale_fill_manual(values=colpal)
+  ggsave(savfile)
 } else {
-  plot + scale_fill_gradient(low=colpal[1],high=colpal[2]) + ggsave(savfile)
+  plot + scale_fill_gradient(low=colpal[1],high=colpal[2])
+  ggsave(savfile)
 }
 }
