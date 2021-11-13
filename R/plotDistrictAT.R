@@ -59,9 +59,9 @@ plot <-
 
 if(is.factor(df[[fillvar]])==T) {
   plot + scale_fill_manual(values=colpal)
-  ggsave(savfile)
+  ggsave(savfile, width = 9, height = 5, dpi = 320)
 } else {
   plot + scale_fill_gradient(low=colpal[1],high=colpal[2])
-  ggsave(savfile)
+  ggsave(savfile, width = 9, height = 5, dpi = 320)
 }
 }
